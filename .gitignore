@@ -53,3 +53,11 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# Visual Studio and benchmark output
+.vs/
+out/
+**/Debug/
+**/Release/
+**/x64/
+docs/instructions.md
