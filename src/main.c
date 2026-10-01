@@ -1,3 +1,5 @@
+#include <windows.h>
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,8 +10,10 @@
 
 typedef void (*max_index_kernel)(size_t n, const float *a, const float *b, float *c, int32_t *idx);
 
+#define REPETITIONS 30
 #define CHECK_LENGTH 17
 #define OUTPUT_GUARD 8
+#define CHECK_CHUNK 4096
 
 typedef struct
 {
@@ -142,8 +146,153 @@ static int run_verification(void)
     return known_answer_ok && checks_ok;
 }
 
-int main(void)
+static int verify_benchmark_output(const kernel_entry *kernel, size_t n, const float *a,
+                                   const float *b, const float *c, const int32_t *idx)
+{
+    float expected_c[CHECK_CHUNK];
+    int32_t expected_idx[CHECK_CHUNK];
+
+    for (size_t start = 0; start < n; start += CHECK_CHUNK)
+    {
+        size_t count = n - start;
+        if (count > CHECK_CHUNK)
+        {
+            count = CHECK_CHUNK;
+        }
+        max_index_c(count, a + start, b + start, expected_c, expected_idx);
+        if (!check_result(kernel->name, c + start, idx + start, expected_c, expected_idx, count))
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static void print_samples(const char *name, size_t n, const float *a, const float *b,
+                          const float *c, const int32_t *idx)
+{
+    printf("  %s first 5 (i: A,B -> C/idx):", name);
+    for (size_t i = 0; i < 5; ++i)
+    {
+        printf(" [%zu] %.0f,%.0f->%.0f/%d", i, a[i], b[i], c[i], (int)idx[i]);
+    }
+    printf("\n  %s last 5 (i: A,B -> C/idx):", name);
+    for (size_t i = n - 5; i < n; ++i)
+    {
+        printf(" [%zu] %.0f,%.0f->%.0f/%d", i, a[i], b[i], c[i], (int)idx[i]);
+    }
+    printf("\n");
+}
+
+static int benchmark_case(size_t n, long long frequency)
+{
+    float *a = (float *)malloc(n * sizeof(*a));
+    float *b = (float *)malloc(n * sizeof(*b));
+    float *c = (float *)malloc(n * sizeof(*c));
+    int32_t *idx = (int32_t *)malloc(n * sizeof(*idx));
+    int ok = 1;
+
+    if (a == NULL || b == NULL || c == NULL || idx == NULL)
+    {
+        fprintf(stderr, "Could not allocate arrays for n=%zu\n", n);
+        free(a);
+        free(b);
+        free(c);
+        free(idx);
+        return 0;
+    }
+
+    initialize_input(a, b, n);
+    printf("\nVector length n=%zu\n", n);
+
+    for (size_t k = 0; k < sizeof(kernels) / sizeof(kernels[0]); ++k)
+    {
+        LARGE_INTEGER start;
+        LARGE_INTEGER finish;
+        double total_ticks = 0.0;
+
+        kernels[k].function(n, a, b, c, idx);
+        for (int repetition = 0; repetition < REPETITIONS; ++repetition)
+        {
+            if (!QueryPerformanceCounter(&start))
+            {
+                fprintf(stderr, "Could not read the performance counter\n");
+                ok = 0;
+                break;
+            }
+            kernels[k].function(n, a, b, c, idx);
+            if (!QueryPerformanceCounter(&finish))
+            {
+                fprintf(stderr, "Could not read the performance counter\n");
+                ok = 0;
+                break;
+            }
+            total_ticks += (double)(finish.QuadPart - start.QuadPart);
+        }
+
+        if (!ok)
+        {
+            break;
+        }
+
+        if (!verify_benchmark_output(&kernels[k], n, a, b, c, idx))
+        {
+            fprintf(stderr, "%s correctness FAIL\n", kernels[k].name);
+            ok = 0;
+            break;
+        }
+
+        printf("%-14s correctness PASS; average %.3f us over %d runs\n", kernels[k].name,
+               total_ticks * 1000000.0 / ((double)frequency * REPETITIONS), REPETITIONS);
+        print_samples(kernels[k].name, n, a, b, c, idx);
+    }
+
+    free(a);
+    free(b);
+    free(c);
+    free(idx);
+    return ok;
+}
+
+static int run_benchmarks(void)
+{
+    LARGE_INTEGER frequency;
+    const size_t lengths[] = {1u << 20, 1u << 26, 1u << 28};
+
+    if (!QueryPerformanceFrequency(&frequency))
+    {
+        fprintf(stderr, "Could not read the performance-counter frequency\n");
+        return 0;
+    }
+
+    printf("Timing kernel calls only; %d runs per listed kernel.\n", REPETITIONS);
+    for (size_t i = 0; i < sizeof(lengths) / sizeof(lengths[0]); ++i)
+    {
+        if (!benchmark_case(lengths[i], frequency.QuadPart))
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int main(int argc, char **argv)
 {
     srand((unsigned int)time(NULL));
-    return run_verification() ? 0 : 1;
+
+    if (argc == 2 && strcmp(argv[1], "--verify") == 0)
+    {
+        return run_verification() ? 0 : 1;
+    }
+    if (argc == 2 && strcmp(argv[1], "--bench") == 0)
+    {
+        if (!run_verification())
+        {
+            return 1;
+        }
+        return run_benchmarks() ? 0 : 1;
+    }
+
+    fprintf(stderr, "Usage: %s --verify | --bench\n", argv[0]);
+    return 2;
 }
