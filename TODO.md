@@ -29,6 +29,6 @@ Checklist for the assignment deliverables. Keep this file updated as the work is
 
 - [x] Keep the Visual Studio 2026 x64 Debug/Release solution, source files, and build commands in the repository.
 - [x] Save the stitched assignment screenshot as `docs/1261G01G1.png`.
-- [ ] Confirm the screenshot filename's group number is correct.
+- [x] Confirm the screenshot filename's group number is correct.
 - [ ] Upload the specification screenshot to the quiz using the required group filename; do not upload the main deliverables there.
 - [ ] Make the completed repository accessible to the instructor and submit the main deliverables through the designated SIMD project submission.
