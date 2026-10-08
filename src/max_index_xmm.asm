@@ -70,5 +70,4 @@ L4:
     jne L2
 
 done:
-    vzeroupper                      ; clean up upper register state for AVX
     ret
