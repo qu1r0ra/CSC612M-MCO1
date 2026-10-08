@@ -120,6 +120,20 @@ measured performance with the other kernels after they are ready.
 
 ### SIMD XMM
 
+Similar to the `Scalar x86-64` implementation, it follows the Windows x64 ABI. Each 
+iteration loads four single-precision floating-point values from A and B into `xmm0`
+and `xmm1`. The elements are compared using `vmaxps` to extract the higher-value elements
+and are loaded into `xmm3` which is stored into the destination array pointed by `r9`. 
+The index value extraction is performed separately through the use of `vcmpgtps` 
+such that if B > A it returns -1, else it returns 0. To transform the -1 values into 1, 
+`vpsrld` was used to shift each element by 31 bits (i.e. 0xFFFF -> 0x0001 and 
+0x0000 -> 0x0000). Finally, the resulting packed data is stored into the index 
+array pointed to by `r10` which stores the resulting idx elements. 
+
+In regard to tail handling, this is handled by iteratively checking whether the remaining
+number of elements to be processed is greater than or equal to four. When the remaining number of
+elements is less than four, the remaining values are processed using the same implementation
+in `Scalar x86-64`. The SIMD XMM kernel passes the known-answer and size checks in Debug and Release. 
 **Immanuel:** describe the XMM implementation, tail handling, correctness
 checks, and measured performance.
 
