@@ -21,7 +21,11 @@ typedef struct
     max_index_kernel function;
 } kernel_entry;
 
-static kernel_entry kernels[] = {{"C", max_index_c}, {"Scalar x86-64", max_index_scalar}};
+static kernel_entry kernels[] = {
+    {"C", max_index_c}, 
+    {"Scalar x86-64", max_index_scalar},
+    {"SIMD XMM", max_index_xmm}
+};
 
 static int check_result(const char *name, const float *actual_c, const int32_t *actual_idx,
                         const float *expected_c, const int32_t *expected_idx, size_t n)
