@@ -175,7 +175,7 @@ Debug and Release, and `--verify` passes for all four kernels in both builds.
 ### Problems and solutions
 
 BUNYI:
-The biggest problem was memory at 2^30. Four arrays of that size need 16 GiB, and few of us had that much free, so we passed the 2^30 runs to the groupmates who might have it. Confirming that no one could spare 16 GiB, we settled on 2^28 as the largest size, which needs 4 GiB, and documented why.
+The biggest problem was memory at 2^30. Four arrays of that size need 16 GiB, and few of us had that much free memory, so we passed the 2^30 runs to the groupmates who might have it. Confirming that no one could spare 16 GiB of free memory, we settled on 2^28 as the largest size, which needs 4 GiB, and documented why.
 
 Beyond writing the kernels, I had to design the testing so our numbers could support our claims. The harness times only the kernel call, warms each kernel once, averages 30 runs, and does the correctness and boundary checks outside the timed region. I compare every output against C in 4096-element chunks, so checking 2^28 elements does not need a second pair of 1 GiB expected arrays. For boundaries, I ran every length from 0 to 17, which covers each XMM and YMM remainder and several vector passes, and placed canary values after each output buffer to catch stores past the end. The 1003-element boundary example came from the assignment.
 
