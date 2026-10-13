@@ -17,9 +17,9 @@ evidence, not an awarded rubric score.
 - [x] Use 2^28 as the large-size fallback and document that the four arrays at 2^30 require 16 GiB.
 
 Current verification and benchmark evidence uses GCC/MinGW 15.1.0 Debug (`-O0`)
-and Release (`-O2 -DNDEBUG`). A Visual Studio solution is included, but the
-recorded measurements are from GCC; successful Visual Studio/MSBuild validation
-has not been recorded.
+and Release (`-O2 -DNDEBUG`). The Visual Studio solution builds with `msbuild`
+in x64 Debug and Release and passes `--verify` for all four kernels (checked
+2026-10-13); the recorded measurements remain the GCC results.
 
 ## Results and report
 
@@ -68,10 +68,12 @@ uses the GCC configurations described above.
 
 ## Final factual review
 
-- [ ] Reconcile the old MSVC/dumpbin eight-float C discussion with the actual GCC scalar C baseline used for the recorded results. **Shared report / C-section owner.**
-- [ ] Correct the XMM mask example to `0xFFFFFFFF >> 31 = 1`. **XMM-section owner: Immanuel.**
-- [ ] Remove the outdated YMM statement that measurements are pending and the timing tables are empty. **YMM-section owner: Enzo.**
-- [ ] Remove remaining contributor prompts once their sections are considered complete. Teammates may add their own experiences where relevant. **Shared report.**
+- [x] Reconcile the old MSVC/dumpbin eight-float C discussion with the actual GCC scalar C baseline used for the recorded results. **Shared report / C-section owner.**
+- [x] Correct the XMM mask example to `0xFFFFFFFF >> 31 = 1`, and describe the XMM tail as a scalar loop with the scalar kernel's logic rather than the same implementation. **XMM-section owner: Immanuel.**
+- [x] Remove the outdated YMM statement that measurements are pending and the timing tables are empty. **YMM-section owner: Enzo.**
+- [x] Remove the harness paragraph's CJ prompt.
+- [ ] Replace the Problems section's "All contributors" prompt with the CJ and Immanuel entries. **CJ and Immanuel.**
+- [ ] Add Enzo's CPU, RAM, and OS to the README if he sends them. The assignment requires neither machine specifications nor his GCC commands; `build-commands.md` stays as the Visual Studio build instructions. **Shared report.**
 
 ## Project delivery
 
