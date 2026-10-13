@@ -73,7 +73,7 @@ uses the GCC configurations described above.
 - [x] Remove the outdated YMM statement that measurements are pending and the timing tables are empty. **YMM-section owner: Enzo.**
 - [x] Remove the harness paragraph's CJ prompt.
 - [x] Replace the Problems section's "All contributors" prompt with the CJ and Immanuel entries.
-- [ ] Add Enzo's CPU, RAM, and OS to the README if he sends them. The assignment requires neither machine specifications nor his GCC commands; `build-commands.md` stays as the Visual Studio build instructions. **Shared report.**
+- [x] Add Enzo's CPU, RAM, and OS to the README. The assignment requires neither machine specifications nor his GCC commands; `build-commands.md` stays as the Visual Studio build instructions. **Shared report.**
 
 ## Project delivery
 

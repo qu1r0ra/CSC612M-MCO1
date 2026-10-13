@@ -122,8 +122,9 @@ output is checked against C in small chunks, avoiding a second pair of large
 expected arrays. A, B, C, and `idx` use 16 bytes per element, so 2^30 elements
 require 16 GiB.
 
-The recorded timings come from GCC/MinGW 15.1.0 on one contributor's machine
-(Debug `-O0`, Release `-O2 -DNDEBUG`), so the C baseline is compiler-optimized
+The recorded timings come from GCC/MinGW 15.1.0 (Debug `-O0`, Release
+`-O2 -DNDEBUG`) on Windows 11 with an AMD Ryzen AI 9 HX 370 (12 cores, 24
+logical processors) and 32 GB of RAM, so the C baseline is compiler-optimized
 code. The included Visual Studio project builds the same sources with MSVC in
 both configurations.
 
