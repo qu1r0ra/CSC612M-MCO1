@@ -72,7 +72,7 @@ uses the GCC configurations described above.
 - [x] Correct the XMM mask example to `0xFFFFFFFF >> 31 = 1`, and describe the XMM tail as a scalar loop with the scalar kernel's logic rather than the same implementation. **XMM-section owner: Immanuel.**
 - [x] Remove the outdated YMM statement that measurements are pending and the timing tables are empty. **YMM-section owner: Enzo.**
 - [x] Remove the harness paragraph's CJ prompt.
-- [ ] Replace the Problems section's "All contributors" prompt with the CJ and Immanuel entries. **CJ and Immanuel.**
+- [x] Replace the Problems section's "All contributors" prompt with the CJ and Immanuel entries.
 - [ ] Add Enzo's CPU, RAM, and OS to the README if he sends them. The assignment requires neither machine specifications nor his GCC commands; `build-commands.md` stays as the Visual Studio build instructions. **Shared report.**
 
 ## Project delivery
