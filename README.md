@@ -186,6 +186,9 @@ benchmark runs are available.
 **All contributors:** describe problems encountered, their fixes, and useful
 observations from implementation and testing.
 
+UMALI:
+When I was assigned to work on the XMM implementation, I already had the idea that a mask would probably be useful for our task. Initially, I looked into our current scalar implementation, and I noticed that in the case of SIMD instructions, a `vmax` instruction instantly simplifies the calculation process needed. As such, the process of handling the symmetric operation became clearer to me, which resulted in just having to figure out how to map the elements into the proper register partitions. In regard to tackling the tail elements, or the elements that are left due to not fitting the allowed four 32FP per XMM register, I considered two main approaches: (1) to continue with a purely vectorized approach by redoing the calculation on the last few remaining elements in the input or (2) to simply adapt the scalar code to solve it. Ultimately, I realized that going with the former would entail additional complexity and did not bear that much weight considering that in any case, the maximum amount of remaining tail elements would at most be three, which resulted in me simply copying the scalar implementation to handle this. 
+
 CHAN: 
 When I stared working on this project hands-on, XMM was already implemented and that alone already acted as a working reference for the YMM implementation. I simply adapted it to process eight elements per iteration while retaining four-byte address scaling for each float and int idx. 
 
