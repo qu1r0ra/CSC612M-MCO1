@@ -1,6 +1,8 @@
 # MCO1 TODO
 
-Checklist for the assignment deliverables. Keep this file updated as the work is completed.
+Checklist for the assignment deliverables, based on the current saved README,
+source files, benchmark logs, and embedded screenshots. Status indicates available
+evidence, not an awarded rubric score.
 
 ## Kernels and verification
 
@@ -12,24 +14,71 @@ Checklist for the assignment deliverables. Keep this file updated as the work is
 - [x] Implement the XMM kernel with tail handling and register it in the harness. **Owner: Immanuel.**
 - [x] Implement and register the YMM kernel with tail handling and `vzeroupper`. **Owner: Enzo.**
 - [x] Verify all four kernels' known-answer and size checks in GCC-built Debug and Release; compare outputs with C and check canaries for lengths 0–17.
-- [ ] Build x64 Debug and Release with the documented Visual Studio/MSBuild process (Visual Studio and `msbuild` were unavailable in the current environment).
 - [x] Use 2^28 as the large-size fallback and document that the four arrays at 2^30 require 16 GiB.
+
+Current verification and benchmark evidence uses GCC/MinGW 15.1.0 Debug (`-O0`)
+and Release (`-O2 -DNDEBUG`). A Visual Studio solution is included, but the
+recorded measurements are from GCC; successful Visual Studio/MSBuild validation
+has not been recorded.
 
 ## Results and report
 
-- [ ] Run each completed kernel at every required size in Debug and Release; record average execution times.
-- [ ] Fill the timing and speedup tables in `README.md`.
-- [ ] Add and embed Debug and Release benchmark-output screenshots showing all four kernels.
-- [ ] Add and embed correctness screenshots for C, scalar x86-64, XMM, and YMM.
-- [ ] Add and embed XMM and YMM size-check screenshots.
-- [ ] Analyze the measured speedups, compiler-generated C SIMD, memory traffic, and differences from theoretical expectations.
-- [ ] Document implementation problems, fixes, and useful observations.
-- [ ] Check that the README contains the complete report and embeds repository images inline.
+- [x] Run all four kernels at every selected size in GCC Debug and Release; record 30-run average execution times.
+- [x] Fill the timing and speedup tables in `README.md` from the latest saved logs.
+- [x] Add and embed Debug and Release benchmark-output screenshots showing all four kernels.
+- [x] Add and embed correctness screenshots for C, scalar x86-64, XMM, and YMM.
+- [x] Add and embed XMM and YMM size-check screenshots.
+- [x] Analyze measured speedups, actual GCC-generated C code, memory traffic, theoretical expectations, and measurement limitations.
+- [x] Document the CHAN contribution's YMM methodology, analysis challenge, and useful observations.
+- [x] Include all required report sections and embed repository images inline; remaining factual consistency work is listed below.
+
+## Assignment #8
+
+| Item | Requirement | Status |
+| --- | --- | --- |
+| a.i | Program-output screenshots with execution times for all cases | Complete |
+| a.ii | Comparative execution-time table and performance analysis | Complete |
+| a.iii | C correctness screenshot | Complete |
+| a.iv | Scalar x86-64 correctness screenshot | Complete |
+| a.v | SIMD XMM correctness screenshot | Complete |
+| a.vi | SIMD YMM correctness screenshot | Complete |
+| a.vii | XMM and YMM boundary-check screenshot | Complete |
+| a.viii | Explain fastest kernels, performance differences, and theoretical versus measured speedups | Complete |
+| a.ix | Discuss problems, solutions, methodology, and useful observations | Complete: CHAN contribution is saved |
+| b | Source and project files needed to load and execute the program | Present and included in the previously verified push |
+
+Combined screenshots cover multiple requirements. Current benchmark evidence
+uses the GCC configurations described above.
+
+## Rubric
+
+| Criterion | Points | Evidence status |
+| --- | ---: | --- |
+| C main with initialization and correct calls/parameter passing | 5 | Covered |
+| Display timing and correctness: C | 10 | Covered |
+| Display timing and correctness: scalar x86-64 | 10 | Covered |
+| Display timing and correctness: SIMD XMM | 10 | Covered |
+| Display timing and correctness: SIMD YMM | 10 | Covered |
+| Boundary handling | 10 | Covered |
+| Comparative results table | 5 | Covered |
+| Analysis of results | 20 | Covered |
+| Discussion of implementation | 10 | Kernel explanations and CHAN observations present |
+| Completeness of uploaded files | 5 | Project, sources, logs, and screenshots were verified pushed; latest README/TODO updates still need pushing |
+| Following instructions | 5 | Final factual review and submission pending; recorded benchmarks use GCC |
+
+## Final factual review
+
+- [ ] Reconcile the old MSVC/dumpbin eight-float C discussion with the actual GCC scalar C baseline used for the recorded results. **Shared report / C-section owner.**
+- [ ] Correct the XMM mask example to `0xFFFFFFFF >> 31 = 1`. **XMM-section owner: Immanuel.**
+- [ ] Remove the outdated YMM statement that measurements are pending and the timing tables are empty. **YMM-section owner: Enzo.**
+- [ ] Remove remaining contributor prompts once their sections are considered complete. Teammates may add their own experiences where relevant. **Shared report.**
 
 ## Project delivery
 
 - [x] Keep the Visual Studio 2026 x64 Debug/Release solution, source files, and build commands in the repository.
 - [x] Save the stitched assignment screenshot as `docs/1261G01G1.png`.
 - [x] Confirm the screenshot filename's group number is correct.
+- [x] Verify that the implementation, timing logs, and embedded screenshots were pushed in commit `c0b2c12`.
+- [ ] Commit and push the latest README corrections/CHAN observations and this updated checklist.
 - [ ] Upload the specification screenshot to the quiz using the required group filename; do not upload the main deliverables there.
-- [ ] Make the completed repository accessible to the instructor and submit the main deliverables through the designated SIMD project submission.
+- [ ] Confirm instructor access and submit the main deliverables through the designated SIMD project submission.
