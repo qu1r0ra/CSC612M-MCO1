@@ -91,13 +91,13 @@ than C.
 |       Release | 2^26 |        0.184x |   1.413x |   1.423x |
 |       Release | 2^28 |        0.172x |   1.295x |   1.319x |
 
-As shown in the table above, utilizing the **YMM registers** is the fastest in **all measured cases**. Comparing XMM and YMM, XMM processes four floats per iteration whereas YMM process eight floats per iteration with the same sequence of operations, which means YMM executes fewer vector-loop iterations. The speedup advantage is strongest at 2^20: YMM is 1.306 times faster than XMM in Debug and 1.211 times faster in Release.
+As shown in the table above, utilizing the **YMM registers** is the fastest in **all measured cases**. Comparing XMM and YMM, XMM processes four floats per iteration whereas YMM processes eight floats per iteration with the same sequence of operations, which means YMM executes fewer vector-loop iterations. The speedup advantage is strongest at 2^20: YMM is 1.306 times faster than XMM in Debug and 1.211 times faster in Release.
 
-However, despite YMM taking in double the number of floats, as shown, the highest speedup advantage is x1.306 and not a x2 speedup. This is becuase both implementations read and write two arrays each and move the same total data. The combined working set of these four arrays is 16 MiB, 1 GiB, and 4 GiB for vector lengths of 2^20, 2^26, and 2^28, respectively. At larger sizes, the small XMM/YMM gap is consistent with memory throughput limiting performance. In essence, while YMM can process more floats at a time, only those operations have increased performance, but not the data trasnfers to the array.
+However, despite YMM taking in double the number of floats, as shown, the highest speedup advantage is x1.306 and not a x2 speedup. This is because both implementations read and write two arrays each and move the same total data. The combined working set of these four arrays is 16 MiB, 1 GiB, and 4 GiB for vector lengths of 2^20, 2^26, and 2^28, respectively. At larger sizes, the small XMM/YMM gap is consistent with memory throughput limiting performance. In essence, while YMM can process more floats at a time, only those operations have increased performance, but not the data transfers to the array.
 
 Release optimization also improves the C baseline, with Release C being more than 7x faster than Debug C at all three sizes of n. Inspection of the actual GCC Release executable shows a loop processing one element per iteration, with conditional moves and mask operations replacing the data-dependent selection branch. It does not contain an eight-element YMM loop. Debug C retains the branch and performs more stack accesses and address calculations.
 
-Scalar assembly also improves on Debug C with a x1.3 speedup but **not** on on Release C which performs on x0.17-0.18 speed compared to Release C. The scalar assembly branches on each comparison. Because A and B are independently generated random values, the branch outcome varies frequently; branch mispredictions are a plausible contributor. The optimized C implementation avoids that selection branch, demonstrating why hand-written assembly is not automatically faster.
+Scalar assembly also improves on Debug C with a x1.3 speedup but **not** on Release C, running at x0.17-0.18 of Release C's speed. The scalar assembly branches on each comparison. Because A and B are independently generated random values, the branch outcome varies frequently; branch mispredictions are a plausible contributor. The optimized C implementation avoids that selection branch, demonstrating why hand-written assembly is not automatically faster.
 
 At n = 2^20, XMM and YMM achieve speedups of 18.750× and 24.490× over Debug C, exceeding their respective lane counts of four and eight. These gains combine packed processing, fewer loop iterations, and branchless selection with reduced overhead compared with unoptimized C. Debug C performs more stack accesses and address calculations and retains a data-dependent selection branch. Therefore, lane count alone does not predict the overall speedup. Release optimization reduces the C baseline’s overhead, resulting in smaller SIMD speedups of 2.735× for XMM and 3.314× for YMM at the same size.
 
@@ -122,16 +122,10 @@ output is checked against C in small chunks, avoiding a second pair of large
 expected arrays. A, B, C, and `idx` use 16 bytes per element, so 2^30 elements
 require 16 GiB.
 
-Visual Studio builds C17 in both configurations. Debug uses `/Od`; Release uses
-`/O2` and `/Oi`. Both target `/arch:AVX2`. The Release C reference was inspected
-with `dumpbin` and contains an eight-float YMM loop plus a remainder path, so
-performance comparisons use compiler-optimized C as the baseline.
-
-The scaffold was validated on an AMD Ryzen 5 5600X (6 cores, 12 logical
-processors), with 15.9 GiB of installed memory, Windows 11 Pro 10.0.26200,
-Visual Studio 2026 / MSVC 14.51.36231, and NASM 3.02. Record any different
-machine or toolchain beside the timing tables. **CJ:** relate the results
-to the hardware, compiler settings, and generated C code.
+The recorded timings come from GCC/MinGW 15.1.0 on one contributor's machine
+(Debug `-O0`, Release `-O2 -DNDEBUG`), so the C baseline is compiler-optimized
+code. The included Visual Studio project builds the same sources with MSVC in
+both configurations.
 
 ### Scalar x86-64
 
@@ -140,8 +134,8 @@ and C in R9; it reads `idx` from `[rsp + 8*5]` at entry. Each iteration loads
 one float from each input, compares them with `ucomiss`, writes the selected
 float and 32-bit index, advances the pointers, and decrements the remaining
 count. `jae` selects A when the values are equal. The scalar kernel passes the
-known-answer and size checks in Debug and Release. **CJ:** compare its
-measured performance with the other kernels after they are ready.
+known-answer and size checks in Debug and Release. It is about 1.3x faster than
+Debug C and about 0.17-0.18x the speed of Release C (see Results).
 
 ### SIMD XMM
 
@@ -151,16 +145,14 @@ and `xmm1`. The elements are compared using `vmaxps` to extract the higher-value
 and are loaded into `xmm3` which is stored into the destination array pointed by `r9`. 
 The index value extraction is performed separately through the use of `vcmpgtps` 
 such that if B > A it returns -1, else it returns 0. To transform the -1 values into 1, 
-`vpsrld` was used to shift each element by 31 bits (i.e. 0xFFFF -> 0x0001 and 
-0x0000 -> 0x0000). Finally, the resulting packed data is stored into the index 
+`vpsrld` was used to shift each element by 31 bits (i.e. 0xFFFFFFFF -> 0x00000001 and 
+0x00000000 -> 0x00000000). Finally, the resulting packed data is stored into the index 
 array pointed to by `r10` which stores the resulting idx elements. 
 
 In regard to tail handling, this is handled by iteratively checking whether the remaining
 number of elements to be processed is greater than or equal to four. When the remaining number of
-elements is less than four, the remaining values are processed using the same implementation
-in `Scalar x86-64`. The SIMD XMM kernel passes the known-answer and size checks in Debug and Release. 
-**Immanuel:** describe the XMM implementation, tail handling, correctness
-checks, and measured performance.
+elements is less than four, the remaining values are processed by a scalar loop with the same
+compare-and-store logic as `Scalar x86-64`. The SIMD XMM kernel passes the known-answer and size checks in Debug and Release. 
 
 ### SIMD YMM
 
@@ -176,21 +168,27 @@ The YMM kernel is registered alongside C, scalar x86-64, and XMM, so
 `--verify` and `--bench` include all four. NASM assembly and runtime
 verification passed in GCC-built x64 Debug (`-O0`) and Release (`-O2 -DNDEBUG`)
 configurations: each kernel passed the known-answer case and lengths 0–17 with
-output canaries. The repository's documented MSBuild build could not be run
-because Visual Studio and `msbuild` are unavailable in the environment.
-Performance measurements are still pending; timing tables remain empty until
-benchmark runs are available.
+output canaries. The Visual Studio solution also builds with `msbuild` in x64
+Debug and Release, and `--verify` passes for all four kernels in both builds.
 
 ### Problems and solutions
 
-**All contributors:** describe problems encountered, their fixes, and useful
-observations from implementation and testing.
+BUNYI:
+The biggest problem was memory at 2^30. Four arrays of that size need 16 GiB, and few of us had that much free, so we passed the 2^30 runs to the groupmates who might have it. Confirming that no one could spare 16 GiB, we settled on 2^28 as the largest size, which needs 4 GiB, and documented why.
+
+Beyond writing the kernels, I had to design the testing so our numbers could support our claims. The harness times only the kernel call, warms each kernel once, averages 30 runs, and does the correctness and boundary checks outside the timed region. I compare every output against C in 4096-element chunks, so checking 2^28 elements does not need a second pair of 1 GiB expected arrays. For boundaries, I ran every length from 0 to 17, which covers each XMM and YMM remainder and several vector passes, and placed canary values after each output buffer to catch stores past the end. The 1003-element boundary example came from the assignment.
+
+I made one design trade-off in the contract. Each kernel does only the element-wise operation, and initialization, timing, and checks live in one C harness, so every kernel is measured the same way.
+
+My aha moment was scalar assembly versus C. In theory assembly should beat C, and in Debug scalar x86-64 does, by about 1.3x. In Release it runs at only about 0.17-0.18x of C's speed, because the Release C avoids the data-dependent branch that the scalar assembly keeps (see CHAN below). Assembly written by hand is not automatically faster than compiled C. The SIMD results matched what I expected, with YMM fastest in every measured case. The benefit shrinks as n grows, though: XMM's Release speedup over C falls from 2.735x at 2^20 to 1.295x at 2^28, which is consistent with memory traffic limiting the gain once the arrays are far larger than the caches. YMM still beats the C baseline in every measured case.
+
+Integration was smooth because Immanuel's and Enzo's kernels do not depend on each other. My effort went into checking that the XMM and YMM kernels were correct and that the harness registered, verified, and timed all four kernels the same way, so the comparison is fair.
 
 UMALI:
 When I was assigned to work on the XMM implementation, I already had the idea that a mask would probably be useful for our task. Initially, I looked into our current scalar implementation, and I noticed that in the case of SIMD instructions, a `vmax` instruction instantly simplifies the calculation process needed. As such, the process of handling the symmetric operation became clearer to me, which resulted in just having to figure out how to map the elements into the proper register partitions. In regard to tackling the tail elements, or the elements that are left due to not fitting the allowed four 32FP per XMM register, I considered two main approaches: (1) to continue with a purely vectorized approach by redoing the calculation on the last few remaining elements in the input or (2) to simply adapt the scalar code to solve it. Ultimately, I realized that going with the former would entail additional complexity and did not bear that much weight considering that in any case, the maximum amount of remaining tail elements would at most be three, which resulted in me simply copying the scalar implementation to handle this. 
 
 CHAN: 
-When I stared working on this project hands-on, XMM was already implemented and that alone already acted as a working reference for the YMM implementation. I simply adapted it to process eight elements per iteration while retaining four-byte address scaling for each float and int idx. 
+When I started working on this project hands-on, XMM was already implemented and that alone already acted as a working reference for the YMM implementation. I simply adapted it to process eight elements per iteration while retaining four-byte address scaling for each float and int idx. 
 
 As for the analysis, the main challenge was explaining why doubling the vector width did not double performance. YMM’s advantage over XMM decreased at larger vector sizes, which is consistent with memory throughput limiting the benefit of wider processing. Another useful observation was that optimized Release C outperformed the scalar assembly. Inspection showed that GCC removed the C implementation’s data-dependent selection branch, while the scalar assembly retained it. These findings showed that register width and implementation language alone do not determine performance.
 
