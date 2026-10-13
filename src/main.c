@@ -22,9 +22,10 @@ typedef struct
 } kernel_entry;
 
 static kernel_entry kernels[] = {
-    {"C", max_index_c}, 
+    {"C", max_index_c},
     {"Scalar x86-64", max_index_scalar},
-    {"SIMD XMM", max_index_xmm}
+    {"SIMD XMM", max_index_xmm},
+    {"SIMD YMM", max_index_ymm}
 };
 
 static int check_result(const char *name, const float *actual_c, const int32_t *actual_idx,

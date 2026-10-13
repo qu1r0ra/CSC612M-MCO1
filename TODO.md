@@ -9,9 +9,10 @@ Checklist for the assignment deliverables. Keep this file updated as the work is
 - [x] Add known-answer checks, comparisons against C, and size checks for lengths 0–17 with output canaries.
 - [x] Add kernel-only timing with one warm-up and 30 measured calls for 2^20, 2^26, and 2^28 elements.
 - [x] Verify the C and scalar kernels pass known-answer and size checks in Debug and Release.
-- [ ] Implement the XMM kernel, including tail handling; add it to the harness after it passes the checks. **Owner: Immanuel.**
-- [ ] Implement the YMM kernel, including tail handling and `vzeroupper`; add it to the harness after it passes the checks. **Owner: Enzo.**
-- [ ] Build and run all four kernels in Debug and Release; check every output against C.
+- [x] Implement the XMM kernel with tail handling and register it in the harness. **Owner: Immanuel.**
+- [x] Implement and register the YMM kernel with tail handling and `vzeroupper`. **Owner: Enzo.**
+- [x] Verify all four kernels' known-answer and size checks in GCC-built Debug and Release; compare outputs with C and check canaries for lengths 0–17.
+- [ ] Build x64 Debug and Release with the documented Visual Studio/MSBuild process (Visual Studio and `msbuild` were unavailable in the current environment).
 - [x] Use 2^28 as the large-size fallback and document that the four arrays at 2^30 require 16 GiB.
 
 ## Results and report
